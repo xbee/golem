@@ -1,4 +1,5 @@
 import random
+
 from golem.ranking.simplerank import SimpleRank
 from networksimulator import PANetworkSimulator
 

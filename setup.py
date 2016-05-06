@@ -5,6 +5,7 @@ import re
 import subprocess
 import sys
 from os import path
+
 from setuptools import setup, find_packages
 from setuptools.command.test import test as TestCommand
 
@@ -97,6 +98,14 @@ test_requirements = [
     'pytest'
 ]
 
+
+def setup_utp(command):
+    cwd = os.getcwd()
+    os.chdir(os.path.join('utp', 'pyutp'))
+    subprocess.check_output(['python', 'setup.py', command])
+    os.chdir(cwd)
+
+
 setup(
     name='golem',
     version='0.1.0',
@@ -128,5 +137,7 @@ setup(
     # ],
     test_suite='tests',
     tests_require=test_requirements,
-    cmdclass={'test': PyTest}
+    cmdclass={
+        'test': PyTest
+    }
 )

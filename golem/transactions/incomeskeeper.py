@@ -1,7 +1,7 @@
 import logging
-import peewee
-
 from datetime import datetime
+
+import peewee
 
 from golem.model import ReceivedPayment, db
 

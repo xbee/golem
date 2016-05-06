@@ -6,15 +6,14 @@ import time
 from os import path
 
 import psutil
-
 from devp2p.crypto import privtopub
 from ethereum.keys import privtoaddr
 from ethereum.transactions import Transaction
 from ethereum.utils import normalize_address
 
+from golem.core.simpleenv import get_local_datadir
 from golem.environments.utils import find_program
 from golem.utils import find_free_net_port
-from golem.core.simpleenv import get_local_datadir
 
 log = logging.getLogger('golem.ethereum')
 

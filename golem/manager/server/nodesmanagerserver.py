@@ -1,8 +1,10 @@
-from golem.network.transport.tcpnetwork import TCPNetwork, TCPListenInfo
-from golem.network.transport.network import ProtocolFactory
-from golem.manager.nodestatesnapshot import NodeStateSnapshot
-from servermanagersession import ServerManagerSessionFactory
 import logging
+
+from golem.network.transport.utp.utpnetwork import NetworkClass
+from golem.manager.nodestatesnapshot import NodeStateSnapshot
+from golem.network.transport.network import PortListenInfo
+from golem.network.transport.protocol import ProtocolFactory
+from servermanagersession import ServerManagerSessionFactory
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +16,7 @@ class NodesManagerServer:
         self.reactor = reactor
         self.nodes_manager = nodes_manager
 
-        self.network = TCPNetwork(ProtocolFactory(ManagerConnState, self, ServerManagerSessionFactory(self)))
+        self.network = NetworkClass(ProtocolFactory(ManagerConnState, self, ServerManagerSessionFactory(self)))
 
         self.__start_accepting()
 
@@ -22,8 +24,8 @@ class NodesManagerServer:
         self.reactor = reactor
 
     def __start_accepting(self):
-        listen_info = TCPListenInfo(self.port, established_callback=self.__listening_established,
-                                    failure_callback=self.__listening_failure)
+        listen_info = PortListenInfo(self.port, established_callback=self.__listening_established,
+                                     failure_callback=self.__listening_failure)
         self.network.listen(listen_info)
 
     def __listening_established(self, port, **kwargs):

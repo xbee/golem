@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-from golem.model import db, Payment, PaymentStatus
+from golem.model import Payment
 
 logger = logging.getLogger(__name__)
 

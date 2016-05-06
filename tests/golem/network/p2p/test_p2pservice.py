@@ -1,7 +1,7 @@
 import time
 import unittest
 
-from golem.network.transport.tcpnetwork import SocketAddress
+from golem.network.transport.network import SocketAddress
 from mock import MagicMock
 
 from golem.clientconfigdescriptor import ClientConfigDescriptor

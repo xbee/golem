@@ -1,5 +1,5 @@
-import json   # debug version
 import cPickle  # release version
+import json   # debug version
 
 IS_DEBUG = False  # True - json, False - pickle
 

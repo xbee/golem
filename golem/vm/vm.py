@@ -1,7 +1,7 @@
-from threading import Lock
-import logging
 import abc
+import logging
 import multiprocessing as mp
+from threading import Lock
 
 from memorychecker import MemoryChecker
 

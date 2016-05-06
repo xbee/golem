@@ -1,12 +1,14 @@
 import sys
-from PyQt4.QtGui import QApplication, QDialog
-from PyQt4.QtCore import QTimer
 from threading import Lock
+
+from PyQt4.QtCore import QTimer
+from PyQt4.QtGui import QApplication
+
 from golem.ui.manager import NodesManagerWidget
 from golem.ui.uicustomizer import ManagerUiCustomizer, NodeDataState
-from nodestatesnapshot import NodeStateSnapshot
 from networksimulator import GLOBAL_SHUTDOWN, LocalNetworkSimulator
-from nodesmanagerlogic import NodesManagerLogicTest, EmptyManagerLogic
+from nodesmanagerlogic import NodesManagerLogicTest
+from nodestatesnapshot import NodeStateSnapshot
 from server.nodesmanagerserver import NodesManagerServer
 
 

@@ -1,8 +1,7 @@
 import ConfigParser
-
+import logging
 import os
 import shutil
-import logging
 
 from simpleauth import SimpleAuth
 

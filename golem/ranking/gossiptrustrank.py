@@ -1,6 +1,6 @@
-from numpy import zeros, hstack, vstack, matrix
 import math
-from random import randint, sample
+from numpy import zeros, hstack, vstack, matrix
+from random import randint
 
 
 class GossipTrustTest:

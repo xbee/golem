@@ -18,7 +18,7 @@ from ipfsApi.commands import ArgCommand
 from ipfsApi.http import HTTPClient, pass_defaults
 from twisted.internet import threads
 
-from golem.network.transport.tcpnetwork import SocketAddress
+from golem.network.transport.network import SocketAddress
 
 logger = logging.getLogger(__name__)
 

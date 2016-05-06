@@ -1,6 +1,7 @@
 import random
-from numpy import matrix
 from collections import OrderedDict
+from numpy import matrix
+
 from golem.ranking.gossiptrustrank import GossipTrustTest, GossipPositiveNegativeTrustRank
 from ranksimulator import RankSimulator
 

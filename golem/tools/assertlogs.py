@@ -1,9 +1,10 @@
 # logger_test.py
 # this file contains the base class containing the newly added method
 # assertLogs
-import unittest
 import collections
 import logging
+import unittest
+
 _LoggingWatcher = collections.namedtuple("_LoggingWatcher",
                                          ["records", "output"])
 

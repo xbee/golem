@@ -1,5 +1,6 @@
-from client import local_client
 from docker import errors
+
+from client import local_client
 
 
 class DockerImage(object):

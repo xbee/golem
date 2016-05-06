@@ -1,7 +1,7 @@
-import time
 import logging
-import random
 import operator
+import random
+import time
 from collections import deque
 
 logger = logging.getLogger(__name__)

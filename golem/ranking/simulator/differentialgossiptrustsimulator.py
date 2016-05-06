@@ -1,6 +1,7 @@
 import random
-from ranksimulator import RankSimulator
+
 from diffgossiptrustrank import DiffGossipTrustRank
+from ranksimulator import RankSimulator
 
 
 class DiffGossipTrustNodeRank:

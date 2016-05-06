@@ -1,11 +1,10 @@
-from resource import TaskResource, TaskResourceHeader, prepare_delta_zip
-
-import os
 import logging
+import os
 
 from golem.core.databuffer import DataBuffer
 from golem.core.fileshelper import copy_file_tree
 from golem.resource.resourcehash import ResourceHash
+from resource import TaskResource, TaskResourceHeader, prepare_delta_zip
 
 logger = logging.getLogger(__name__)
 

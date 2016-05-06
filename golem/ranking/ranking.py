@@ -1,16 +1,15 @@
-import logging
-import time
-import random
-import operator
 import datetime
-
-from twisted.internet.task import deferLater
+import logging
+import operator
+import random
+import time
 from itertools import izip
+
 from peewee import IntegrityError
+from twisted.internet.task import deferLater
 
-from golem.model import LocalRank, GlobalRank, NeighbourLocRank, db
 from golem.core.variables import BREAK_TIME, ROUND_TIME, END_ROUND_TIME, STAGE_TIME
-
+from golem.model import LocalRank, GlobalRank, NeighbourLocRank, db
 
 logger = logging.getLogger(__name__)
 

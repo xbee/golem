@@ -1,8 +1,8 @@
 # Generating, solving and checking solutions of crypto-puzzles for proof of work system
 
-from random import randint
-from hashlib import sha256
 import time
+from hashlib import sha256
+from random import randint
 
 __author__ = 'Magda.Stasiewicz'
 

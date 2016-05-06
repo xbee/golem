@@ -1,15 +1,18 @@
 import logging
-import random
 import os
+import random
 import time
 
-from golem.network.transport.network import ProtocolFactory, SessionFactory
-from golem.network.transport.tcpserver import PendingConnectionsServer
-from golem.network.transport.tcpnetwork import SocketAddress, TCPNetwork, FilesProtocol, DecryptFileConsumer
-from golem.resource.dirmanager import DirManager
-from golem.resource.resourcesmanager import DistributedResourceManager
-from golem.resource.resourcesession import ResourceSession
+from golem.network.transport.utp.utpnetwork import NetworkClass
+from golem.network.transport.network import SocketAddress
+from golem.network.transport.prosumer import DecryptFileConsumer
+from golem.network.transport.protocol import FilesProtocol, ProtocolFactory
+from golem.network.transport.server import PendingConnectionsServer
+from golem.network.transport.session import SessionFactory
 from golem.ranking.ranking import RankingStats
+from golem.resource.dirmanager import DirManager
+from golem.resource.resourcesession import ResourceSession
+from golem.resource.resourcesmanager import DistributedResourceManager
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +28,7 @@ class ResourceServer(PendingConnectionsServer):
         self.dir_manager = DirManager(client.datadir, config_desc.node_name)
         self.resource_manager = DistributedResourceManager(self.dir_manager.get_resource_dir())
         self.use_ipv6 = use_ipv6
-        network = TCPNetwork(ProtocolFactory(FilesProtocol, self, SessionFactory(ResourceSession)), use_ipv6)
+        network = NetworkClass(ProtocolFactory(FilesProtocol, self, SessionFactory(ResourceSession)), use_ipv6)
         PendingConnectionsServer.__init__(self, config_desc, network)
 
         self.resource_peers = {}

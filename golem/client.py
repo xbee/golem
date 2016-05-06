@@ -1,34 +1,28 @@
-import time
 import logging
+import time
 from os import path
-
-from twisted.internet import task
 from threading import Lock
 
-from golem.core.variables import APP_NAME, APP_VERSION
-from golem.network.ipfs.daemon_manager import IPFSDaemonManager
-from golem.tools import filelock
-from golem.network.p2p.p2pservice import P2PService
-from golem.network.p2p.node import Node
-from golem.task.taskbase import resource_types
-from golem.task.taskserver import TaskServer
-from golem.task.taskmanager import TaskManagerEventListener
-
-from golem.core.keysauth import EllipticalKeysAuth
-
-from golem.manager.nodestatesnapshot import NodeStateSnapshot
+from twisted.internet import task
 
 from golem.appconfig import AppConfig
-from golem.core.simpleenv import get_local_datadir
-
-from golem.model import Database
-from golem.network.transport.message import init_messages
 from golem.clientconfigdescriptor import ClientConfigDescriptor, ConfigApprover
+from golem.core.keysauth import EllipticalKeysAuth
+from golem.core.simpleenv import get_local_datadir
 from golem.environments.environmentsmanager import EnvironmentsManager
-from golem.resource.ipfs.resourceserver import IPFSResourceServer
-from golem.resource.dirmanager import DirManager
+from golem.manager.nodestatesnapshot import NodeStateSnapshot
+from golem.model import Database
+from golem.network.ipfs.daemon_manager import IPFSDaemonManager
+from golem.network.p2p.node import Node
+from golem.network.p2p.p2pservice import P2PService
+from golem.network.transport.message import init_messages
 from golem.ranking.ranking import Ranking, RankingStats
-
+from golem.resource.dirmanager import DirManager
+from golem.resource.ipfs.resourceserver import IPFSResourceServer
+from golem.task.taskbase import resource_types
+from golem.task.taskmanager import TaskManagerEventListener
+from golem.task.taskserver import TaskServer
+from golem.tools import filelock
 from golem.transactions.ethereum.ethereumtransactionsystem import EthereumTransactionSystem
 
 logger = logging.getLogger(__name__)
@@ -477,3 +471,4 @@ class Client:
     def _unlock_datadir(self):
         # FIXME: Client should have close() method?
         self.__datadir_lock.close()  # Closing file unlocks it.
+

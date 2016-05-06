@@ -1,15 +1,18 @@
-import time
-import os
 import logging
+import os
+import time
 from collections import deque
-from taskmanager import TaskManager
-from taskcomputer import TaskComputer
-from tasksession import TaskSession
-from taskkeeper import TaskHeaderKeeper
+
+from golem.network.transport.utp.utpnetwork import NetworkClass
+from golem.network.transport.network import SocketAddress, ConnectInfo
+from golem.network.transport.protocol import MidAndFilesProtocol, ProtocolFactory
+from golem.network.transport.server import PendingConnectionsServer, PenConnStatus
+from golem.network.transport.session import SessionFactory
 from golem.ranking.ranking import RankingStats
-from golem.network.transport.tcpnetwork import TCPNetwork, TCPConnectInfo, SocketAddress, MidAndFilesProtocol
-from golem.network.transport.network import ProtocolFactory, SessionFactory
-from golem.network.transport.tcpserver import PendingConnectionsServer, PenConnStatus
+from taskcomputer import TaskComputer
+from taskkeeper import TaskHeaderKeeper
+from taskmanager import TaskManager
+from tasksession import TaskSession
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +46,7 @@ class TaskServer(PendingConnectionsServer):
 
         self.response_list = {}
 
-        network = TCPNetwork(ProtocolFactory(MidAndFilesProtocol, self, SessionFactory(TaskSession)), use_ipv6)
+        network = NetworkClass(ProtocolFactory(MidAndFilesProtocol, self, SessionFactory(TaskSession)), use_ipv6)
         PendingConnectionsServer.__init__(self, config_desc, network)
 
     def start_accepting(self):
@@ -363,8 +366,8 @@ class TaskServer(PendingConnectionsServer):
         self.client.inform_about_task_nat_hole(asking_node.key, client_key_id, addr, port, ans_conn_id)
 
     def traverse_nat(self, key_id, addr, port, conn_id, super_key_id):
-        connect_info = TCPConnectInfo([SocketAddress(addr, port)], self.__connection_for_traverse_nat_established,
-                                      self.__connection_for_traverse_nat_failure)
+        connect_info = ConnectInfo([SocketAddress(addr, port)], self.__connection_for_traverse_nat_established,
+                                   self.__connection_for_traverse_nat_failure)
         self.network.connect(connect_info, client_key_id=key_id, conn_id=conn_id, super_key_id=super_key_id)
 
     def traverse_nat_failure(self, conn_id):

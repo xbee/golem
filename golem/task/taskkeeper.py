@@ -4,7 +4,6 @@ import time
 from math import ceil
 
 from golem.core.variables import APP_VERSION
-
 from .taskbase import TaskHeader, ComputeTaskDef
 
 logger = logging.getLogger(__name__)

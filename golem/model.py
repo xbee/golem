@@ -1,12 +1,11 @@
 import datetime
 import json
 import logging
-from enum import Enum
 from os import path
 
+from enum import Enum
 from peewee import (SqliteDatabase, Model, CharField, IntegerField, FloatField,
                     DateTimeField, TextField, CompositeKey)
-
 
 log = logging.getLogger('golem.db')
 

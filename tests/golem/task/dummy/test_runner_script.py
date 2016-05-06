@@ -1,6 +1,6 @@
 import mock
 
-from golem.network.transport.tcpnetwork import SocketAddress
+from golem.network.transport.network import SocketAddress
 from golem.testutils import DatabaseFixture
 
 import runner

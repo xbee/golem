@@ -3,13 +3,12 @@ import os
 import shutil
 import tempfile
 import unittest
-from os import path, mkdir
+from os import path
 
 from golem.core.common import is_windows, is_osx
-
 from golem.core.simpleenv import get_local_datadir
-from golem.model import Database
 from golem.ethereum import Client
+from golem.model import Database
 
 
 class TempDirFixture(unittest.TestCase):

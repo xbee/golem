@@ -11,9 +11,10 @@ from golem.network.transport.message import MessageHello, MessageRandVal, Messag
     MessageStartSessionResponse, MessageMiddleman, MessageMiddlemanReady, MessageBeingMiddlemanAccepted, \
     MessageMiddlemanAccepted, MessageJoinMiddlemanConn, MessageNatPunch, MessageWaitForNatTraverse, \
     MessageResourceHashList, MessageTaskResultHash
+from golem.network.transport.prosumer import EncryptFileProducer, DecryptFileConsumer, EncryptDataProducer, \
+    DecryptDataConsumer
+from golem.network.transport.protocol import MidAndFilesProtocol
 from golem.network.transport.session import MiddlemanSafeSession
-from golem.network.transport.tcpnetwork import MidAndFilesProtocol, EncryptFileProducer, DecryptFileConsumer, \
-    EncryptDataProducer, DecryptDataConsumer
 from golem.resource.resource import decompress_dir
 from golem.task.taskbase import result_types, resource_types
 from golem.transactions.ethereum.ethereumpaymentskeeper import EthAccountInfo

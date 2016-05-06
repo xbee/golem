@@ -2,13 +2,15 @@ import logging
 import random
 import time
 
+from golem.network.transport.server import Server, PendingConnectionsServer, PenConnStatus
 from ipaddress import AddressValueError
 
+from golem.network.transport.utp.utpnetwork import NetworkClass
 from golem.core.simplechallenge import create_challenge, accept_challenge, solve_challenge
 from golem.network.p2p.peersession import PeerSession
-from golem.network.transport.network import ProtocolFactory, SessionFactory
-from golem.network.transport.tcpnetwork import TCPNetwork, TCPConnectInfo, SocketAddress, SafeProtocol
-from golem.network.transport.tcpserver import TCPServer, PendingConnectionsServer, PenConnStatus
+from golem.network.transport.network import SocketAddress, ConnectInfo
+from golem.network.transport.protocol import SafeProtocol, ProtocolFactory
+from golem.network.transport.session import SessionFactory
 from golem.ranking.gossipkeeper import GossipKeeper
 from golem.task.taskconnectionshelper import TaskConnectionsHelper
 from peerkeeper import PeerKeeper
@@ -29,7 +31,7 @@ class P2PService(PendingConnectionsServer):
         :param ClientConfigDescriptor config_desc: configuration options
         :param KeysAuth keys_auth: authorization manager
         """
-        network = TCPNetwork(ProtocolFactory(SafeProtocol, self, SessionFactory(PeerSession)), config_desc.use_ipv6)
+        network = NetworkClass(ProtocolFactory(SafeProtocol, self, SessionFactory(PeerSession)), config_desc.use_ipv6)
         PendingConnectionsServer.__init__(self, config_desc, network)
 
         self.node = node
@@ -88,8 +90,8 @@ class P2PService(PendingConnectionsServer):
         self.node.p2p_prv_port = port
 
     def connect(self, socket_address):
-        connect_info = TCPConnectInfo([socket_address], self.__connection_established,
-                                      P2PService.__connection_failure)
+        connect_info = ConnectInfo([socket_address], self.__connection_established,
+                                   P2PService.__connection_failure)
         self.network.connect(connect_info)
 
     def set_task_server(self, task_server):
@@ -276,7 +278,7 @@ class P2PService(PendingConnectionsServer):
         :param ClientConfigDescriptor config_desc: new config descriptor
         """
 
-        TCPServer.change_config(self, config_desc)
+        Server.change_config(self, config_desc)
 
         self.last_message_time_threshold = self.config_desc.p2p_session_timeout
 

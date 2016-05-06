@@ -2,11 +2,8 @@ import unittest
 
 from mock import Mock
 
-from golem.network.transport.tcpnetwork import SocketAddress
-
-from golem.network.transport.tcpserver import (TCPServer, PendingConnectionsServer, PendingConnection,
-                                               PendingListening)
 from golem.network.p2p.node import Node
+from golem.network.transport.server import PendingConnection, PendingListening, Server, PendingConnectionsServer
 
 
 class ConfigDescriptor(object):
@@ -31,7 +28,7 @@ class Network(object):
         self.connected = True
 
 
-class TestTCPServer(unittest.TestCase):
+class TestServer(unittest.TestCase):
 
     def __test_change_scenario(self, server, port, start_port, end_port, stop_state, listen_state):
         server.network = Network()
@@ -41,7 +38,7 @@ class TestTCPServer(unittest.TestCase):
         self.assertEqual(server.network.listen_called, listen_state)
 
     def test_change_config(self):
-        server = TCPServer(None, Network())
+        server = Server(None, Network())
         self.assertEqual(server.cur_port, 0)
         self.assertFalse(server.network.stop_listening_called)
         server.change_config(ConfigDescriptor(10, 20))

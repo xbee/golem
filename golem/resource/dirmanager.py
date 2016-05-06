@@ -1,8 +1,6 @@
-import os
 import logging
+import os
 import shutil
-
-from golem.core.simpleexccmd import is_windows
 
 logger = logging.getLogger(__name__)
 

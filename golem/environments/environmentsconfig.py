@@ -1,6 +1,7 @@
-from golem.core.simpleconfig import SimpleConfig, ConfigEntry
 import logging
 from os import path
+
+from golem.core.simpleconfig import SimpleConfig, ConfigEntry
 
 ENV_VERSION = 1.01
 CONFIG_FILENAME = "environments.ini"

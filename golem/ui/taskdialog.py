@@ -1,4 +1,5 @@
 from PyQt4 import QtCore, QtGui
+
 from gen.ui_taskdialog import Ui_TaskSpecDialog
 
 try:

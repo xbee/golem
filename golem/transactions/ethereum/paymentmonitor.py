@@ -1,7 +1,6 @@
 from twisted.internet.task import LoopingCall
 
 from golem.model import PaymentStatus
-
 from .paymentprocessor import PaymentProcessor, log
 
 

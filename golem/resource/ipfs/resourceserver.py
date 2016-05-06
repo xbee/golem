@@ -1,6 +1,6 @@
+import copy
 import logging
 import time
-import copy
 from threading import Lock
 
 from golem.resource.ipfs.resourcesmanager import IPFSResourceManager

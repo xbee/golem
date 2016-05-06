@@ -1,9 +1,9 @@
 import logging
 from os import path
 
+from golem.clientconfigdescriptor import ClientConfigDescriptor
 from golem.core.simpleconfig import SimpleConfig, ConfigEntry
 from golem.core.simpleenv import SimpleEnv
-from golem.clientconfigdescriptor import ClientConfigDescriptor
 
 CONFIG_FILENAME = "app_cfg.ini"
 ESTM_FILENAME = "minilight.ini"

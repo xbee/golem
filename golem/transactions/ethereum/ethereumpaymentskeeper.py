@@ -1,7 +1,7 @@
 import logging
-from rlp.utils import encode_hex
 
 from ethereum.utils import normalize_address
+from rlp.utils import encode_hex
 
 from golem.transactions.paymentskeeper import AccountInfo
 

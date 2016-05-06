@@ -1,8 +1,9 @@
+import cPickle as pickle
+import logging
+
+from golem.manager.managerconnstate import ManagerConnState
 from golem.network.transport.message import MessagePeerStatus, MessageNewTask, MessageKillNode, MessageKillAllNodes, \
     MessageNewNodes
-import cPickle as pickle
-from golem.manager.managerconnstate import ManagerConnState
-import logging
 
 logger = logging.getLogger(__name__)
 

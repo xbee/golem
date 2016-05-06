@@ -1,17 +1,16 @@
-import os
 import abc
 import logging
+import os
+from hashlib import sha256
 from random import random
 
 from Crypto.PublicKey import RSA
-from simplehash import SimpleHash
 from devp2p.crypto import mk_privkey, privtopub, ECCx
 from sha3 import sha3_256
-from hashlib import sha256
 
-from golem.core.variables import PRIVATE_KEY_PREF, PUBLIC_KEY_PREF
 from golem.core.simpleenv import get_local_datadir
-
+from golem.core.variables import PRIVATE_KEY_PREF, PUBLIC_KEY_PREF
+from simplehash import SimpleHash
 
 logger = logging.getLogger(__name__)
 

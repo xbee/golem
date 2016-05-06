@@ -6,8 +6,8 @@ from os import path
 
 import docker.errors
 
-from golem.core.common import is_windows, nt_path_to_posix_path
 from client import local_client
+from golem.core.common import is_windows, nt_path_to_posix_path
 
 logger = logging.getLogger(__name__)
 

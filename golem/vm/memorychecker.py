@@ -1,6 +1,7 @@
-from threading import Thread, Event
-import psutil
 import time
+from threading import Thread, Event
+
+import psutil
 
 
 class MemoryChecker(Thread):

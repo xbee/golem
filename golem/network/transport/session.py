@@ -3,13 +3,32 @@ import logging
 import random
 import time
 
+from twisted.internet.protocol import Factory, Protocol, connectionDone
+
 from golem.core.variables import MSG_TTL, FUTURE_TIME_TOLERANCE, UNVERIFIED_CNT
 from golem.network.transport.message import MessageDisconnect, Message
 
 logger = logging.getLogger(__name__)
 
 
-from network import Session
+class Session(object):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def __init__(self, conn):
+        return
+
+    @abc.abstractmethod
+    def dropped(self):
+        return
+
+    @abc.abstractmethod
+    def interpret(self, msg):
+        return
+
+    @abc.abstractmethod
+    def disconnect(self, reason):
+        return
 
 
 class SafeSession(Session):
@@ -311,3 +330,31 @@ class MiddlemanSafeSession(BasicSafeSession):
             return BasicSafeSession._check_msg(self, msg)
         else:
             return BasicSession._check_msg(self, msg)
+
+
+class SessionFactory(Factory):
+    def __init__(self, session_class):
+        self.session_class = session_class
+
+    def get_session(self, conn):
+        return self.session_class(conn)
+
+
+class SessionProtocol(Protocol):
+    def __init__(self):
+        """Connection-oriented basic protocol for twisted"""
+        self.session_factory = None
+        self.session = None
+
+    def set_session_factory(self, session_factory):
+        """ :param golem.network.transport.session.SessionFactory session_factory: """
+        self.session_factory = session_factory
+
+    # Protocol function
+    def connectionMade(self):
+        """Called when new connection is successfully opened"""
+        Protocol.connectionMade(self)
+        self.session = self.session_factory.get_session(self)
+
+    def connectionLost(self, reason=connectionDone):
+        del self.session

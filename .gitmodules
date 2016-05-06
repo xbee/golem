@@ -2,3 +2,6 @@
 	path = golem/ethereum/contracts
 	url = https://github.com/imapp-pl/ethereum-contracts.git
 	branch = master
+[submodule "utp/libutp"]
+	path = utp/libutp
+	url = https://github.com/bittorrent/libutp.git

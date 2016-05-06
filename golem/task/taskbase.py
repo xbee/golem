@@ -1,5 +1,5 @@
-import time
 import abc
+import time
 
 from golem.core.variables import APP_VERSION
 

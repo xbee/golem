@@ -25,12 +25,10 @@
 #############################################################################
 
 
-import sys
 import optparse
-
+import sys
 from PyQt4 import QtCore
 from PyQt4.uic.driver import Driver
-
 
 Version = "Python User Interface Compiler %s for Qt version %s" % (QtCore.PYQT_VERSION_STR, QtCore.QT_VERSION_STR)
 

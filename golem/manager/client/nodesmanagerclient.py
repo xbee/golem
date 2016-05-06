@@ -1,23 +1,22 @@
+import logging
 
 from clientmanagersession import ClientManagerSessionFactory
-from golem.network.transport.tcpnetwork import TCPNetwork, SocketAddress, TCPConnectInfo
-from golem.network.transport.network import ProtocolFactory
+from golem.network.transport.utp.utpnetwork import NetworkClass
 from golem.manager.managerconnstate import ManagerConnState
-
-import logging
+from golem.network.transport.network import SocketAddress, ConnectInfo
+from golem.network.transport.protocol import ProtocolFactory
 
 logger = logging.getLogger(__name__)
 
 
 class NodesManagerClient:
 
-
     def __init__(self, manager_server_address, manager_server_port):
         self.manager_server_address    = manager_server_address
         self.manager_server_port       = manager_server_port
         self.client_manager_session   = None
 
-        self.network = TCPNetwork(ProtocolFactory(ManagerConnState, None, ClientManagerSessionFactory()))
+        self.network = NetworkClass(ProtocolFactory(ManagerConnState, None, ClientManagerSessionFactory()))
 
     def start(self):
         try:
@@ -51,7 +50,7 @@ class NodesManagerClient:
 
         assert not self.client_manager_session # connection already established
 
-        connect_info = TCPConnectInfo([SocketAddress(self.manager_server_address, self.manager_server_port)], self.__connection_established, self.__connection_failure)
+        connect_info = ConnectInfo([SocketAddress(self.manager_server_address, self.manager_server_port)], self.__connection_established, self.__connection_failure)
         self.network.connect(connect_info)
 
     def __connection_established(self, session):

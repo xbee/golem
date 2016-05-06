@@ -1,7 +1,9 @@
-from PyQt4 import QtCore, QtGui
-from gen.ui_nodetasks import Ui_NodeTasksWidget
-from progressbar import create_wrapped_progress_bar
 import logging
+from PyQt4 import QtGui
+
+from gen.ui_nodetasks import Ui_NodeTasksWidget
+
+from progressbar import create_wrapped_progress_bar
 
 logger = logging.getLogger(__name__)
 

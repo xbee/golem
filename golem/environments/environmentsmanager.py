@@ -1,4 +1,5 @@
 import logging
+
 from golem.environments.environmentsconfig import EnvironmentsConfig
 
 logger = logging.getLogger(__name__)

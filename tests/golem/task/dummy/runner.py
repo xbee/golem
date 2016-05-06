@@ -17,7 +17,7 @@ from twisted.internet import reactor
 
 import golem.client
 from golem.environments.environment import Environment
-from golem.network.transport.tcpnetwork import SocketAddress
+from golem.network.transport.network import SocketAddress
 from task import DummyTask, DummyTaskParameters
 
 REQUESTING_NODE_KIND = "requester"

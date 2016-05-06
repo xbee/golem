@@ -1,7 +1,8 @@
-import socket
-import os
 import logging
 import netifaces
+import os
+import socket
+
 import stun
 
 from variables import DEFAULT_CONNECT_TO, DEFAULT_CONNECT_TO_PORT

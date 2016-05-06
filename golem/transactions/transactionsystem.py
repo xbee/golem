@@ -1,7 +1,6 @@
 from golem.model import Payment
-
-from paymentskeeper import PaymentsKeeper
 from incomeskeeper import IncomesKeeper
+from paymentskeeper import PaymentsKeeper
 
 
 class TransactionSystem(object):

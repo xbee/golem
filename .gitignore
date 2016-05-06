@@ -6,6 +6,7 @@ ui_*.py
 
 # C extensions
 *.so
+*.out
 
 # Distribution / packaging
 .Python
@@ -26,3 +27,6 @@ sdist/
 
 # Local data
 data/
+
+utp/build
+utp/dist

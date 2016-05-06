@@ -1,21 +1,26 @@
 import imp
 import logging
 import os
+import struct
 import sys
 import time
+import twisted
 import unittest
 from contextlib import contextmanager
 from threading import Thread
-
-import twisted
 from twisted.internet.selectreactor import SelectReactor
 from twisted.internet.task import Clock
 
+from mock import MagicMock
+
 from golem.core.databuffer import DataBuffer
-from golem.network.transport.message import Message, MessageHello
-from golem.network.transport.network import ProtocolFactory, SessionFactory, SessionProtocol
-from golem.network.transport.tcpnetwork import TCPNetwork, TCPListenInfo, TCPListeningInfo, TCPConnectInfo, \
-    SocketAddress, BasicProtocol, ServerProtocol, SafeProtocol
+from golem.network.transport.message import Message, MessageHello, MessageDisconnect
+from golem.network.transport.network import SocketAddress, \
+    PortListenInfo, PortListeningInfo, ConnectInfo, logger
+from golem.network.transport.utp.utpnetwork import NetworkClass
+from golem.network.transport.protocol import BasicProtocol, ServerProtocol, SafeProtocol, ProtocolFactory
+from golem.network.transport.session import SessionFactory, SessionProtocol
+from golem.tools.assertlogs import LogTestCase
 
 
 class ASession(object):
@@ -79,6 +84,7 @@ def reinstall_reactor(_reactor):
 def uninstall_reactor():
     del twisted.internet.reactor
     del sys.modules['twisted.internet.reactor']
+
 
 class MockReactorThread(Thread):
     running = False
@@ -150,7 +156,7 @@ class TestNetwork(unittest.TestCase):
         self.kwargs_len = 0
         session_factory = SessionFactory(ASession)
         protocol_factory = ProtocolFactory(SafeProtocol, Server(), session_factory)
-        self.network = TCPNetwork(protocol_factory)
+        self.network = NetworkClass(protocol_factory)
 
     def test_listen(self):
 
@@ -172,23 +178,23 @@ class TestNetwork(unittest.TestCase):
             self.__stop_listening_failure(**kwargs)
             async_ready[0] = True
 
-        listen_info = TCPListenInfo(11101,
-                                    established_callback=_conn_success,
-                                    failure_callback=_conn_failure)
+        listen_info = PortListenInfo(11101,
+                                     established_callback=_conn_success,
+                                     failure_callback=_conn_failure)
         with async_scope(async_ready):
             self.network.listen(listen_info)
         self.assertEquals(self.port, 11101)
 
-        listen_info = TCPListenInfo(11101,
-                                    established_callback=_conn_success,
-                                    failure_callback=_conn_failure)
+        listen_info = PortListenInfo(11101,
+                                     established_callback=_conn_success,
+                                     failure_callback=_conn_failure)
         with async_scope(async_ready):
             self.network.listen(listen_info)
         self.assertEquals(self.port, None)
 
-        listen_info = TCPListenInfo(11101, 11111,
-                                    established_callback=_conn_success,
-                                    failure_callback=_conn_failure)
+        listen_info = PortListenInfo(11101, 11111,
+                                     established_callback=_conn_success,
+                                     failure_callback=_conn_failure)
         with async_scope(async_ready):
             self.network.listen(listen_info)
         self.assertEquals(self.port, 11102)
@@ -199,9 +205,9 @@ class TestNetwork(unittest.TestCase):
         self.assertEquals(len(self.network.active_listeners), 3)
         self.assertEquals(self.kwargs_len, 5)
 
-        listening_info = TCPListeningInfo(11102,
-                                          stopped_callback=_stop_success,
-                                          stopped_errback=_stop_failure)
+        listening_info = PortListeningInfo(11102,
+                                           stopped_callback=_stop_success,
+                                           stopped_errback=_stop_failure)
         with async_scope(async_ready):
             d = self.network.stop_listening(listening_info)
             time.sleep(5)
@@ -209,17 +215,17 @@ class TestNetwork(unittest.TestCase):
         self.assertTrue(d.called)
         self.assertTrue(self.stop_listening_success)
 
-        listening_info = TCPListeningInfo(11102,
-                                          stopped_callback=_stop_success,
-                                          stopped_errback=_stop_failure)
+        listening_info = PortListeningInfo(11102,
+                                           stopped_callback=_stop_success,
+                                           stopped_errback=_stop_failure)
         with async_scope(async_ready):
             self.network.stop_listening(listening_info)
         self.assertEquals(len(self.network.active_listeners), 2)
         self.assertFalse(self.stop_listening_success)
 
-        listen_info = TCPListenInfo(11101, 11105,
-                                    established_callback=_conn_success,
-                                    failure_callback=_conn_failure)
+        listen_info = PortListenInfo(11101, 11105,
+                                     established_callback=_conn_success,
+                                     failure_callback=_conn_failure)
         with async_scope(async_ready):
             self.network.listen(listen_info)
         self.assertEquals(self.port, 11102)
@@ -248,33 +254,33 @@ class TestNetwork(unittest.TestCase):
             self.__listen_failure(*args, **kwargs)
             async_ready[0] = True
 
-        listen_info = TCPListenInfo(21111,
-                                    established_callback=_listen_success,
-                                    failure_callback=_listen_failure)
+        listen_info = PortListenInfo(21111,
+                                     established_callback=_listen_success,
+                                     failure_callback=_listen_failure)
         with async_scope(async_ready):
             self.network.listen(listen_info)
 
-        listen_info = TCPListenInfo(21112,
-                                    established_callback=_listen_success,
-                                    failure_callback=_listen_failure)
+        listen_info = PortListenInfo(21112,
+                                     established_callback=_listen_success,
+                                     failure_callback=_listen_failure)
         with async_scope(async_ready):
             self.network.listen(listen_info)
 
         address = SocketAddress('127.0.0.1', 21111)
-        connect_info = TCPConnectInfo([address], _success_fn(0), _failure_fn(0))
+        connect_info = ConnectInfo([address], _success_fn(0), _failure_fn(0))
 
         with async_scope(async_ready, 0):
             self.network.connect(connect_info)
         self.assertTrue(self.connect_success)
 
         address2 = SocketAddress('127.0.0.1', 21112)
-        connect_info_2 = TCPConnectInfo([address2], _success_fn(1), _failure_fn(1))
+        connect_info_2 = ConnectInfo([address2], _success_fn(1), _failure_fn(1))
 
         with async_scope(async_ready, 1):
             self.network.connect(connect_info_2)
         self.assertTrue(self.connect_success)
 
-        connect_info_3 = TCPConnectInfo([address, address2], _success_fn(2), _failure_fn(2))
+        connect_info_3 = ConnectInfo([address, address2], _success_fn(2), _failure_fn(2))
 
         with async_scope(async_ready, 2):
             self.network.connect(connect_info_3)
@@ -391,7 +397,29 @@ class TestProtocols(unittest.TestCase):
             assert 'session' not in p.__dict__
 
 
-class TestBasicProtocol(unittest.TestCase):
+class TestBasicProtocol(LogTestCase):
+    def test_init(self):
+        protocol = BasicProtocol()
+        self.assertIsInstance(protocol, BasicProtocol)
+        self.assertFalse(protocol.opened)
+
+    def test_dataReceived(self):
+        data = "abc"
+        protocol = BasicProtocol()
+        self.assertIsNone(protocol.dataReceived(data))
+        protocol.opened = True
+        self.assertIsNone(protocol.dataReceived(data))
+        protocol.session = MagicMock()
+        with self.assertNoLogs(logger, level=40):
+            self.assertIsNone(protocol.dataReceived(data))
+        protocol.db.clear_buffer()
+
+        m = MessageDisconnect()
+        data = m.serialize()
+        packed_data = struct.pack("!L", len(data)) + data
+        protocol.dataReceived(packed_data)
+        self.assertEqual(protocol.session.interpret.call_args[0][0].get_type(), m.get_type())
+
     def test_send_and_receive_message(self):
         p = BasicProtocol()
         p.transport = Transport()

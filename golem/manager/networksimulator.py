@@ -1,9 +1,8 @@
-from threading import Thread, Lock
-import time
-import random
 import logging
-
+import random
+import time
 from PyQt4 import QtCore
+from threading import Thread, Lock
 
 from nodestatesnapshot import NodeStateSnapshot, LocalTaskStateSnapshot, TaskChunkStateSnapshot
 

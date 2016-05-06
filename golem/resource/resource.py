@@ -1,10 +1,9 @@
 import logging
+import os
+import zipfile
 
 from golem.core.simplehash import SimpleHash
 from golem.resource.dirmanager import split_path
-
-import os
-import zipfile
 
 logger = logging.getLogger(__name__)
 

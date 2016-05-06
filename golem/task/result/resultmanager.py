@@ -2,12 +2,9 @@ import abc
 import logging
 import os
 import uuid
-import time
-
 from threading import Lock
-from golem.core.fileencrypt import FileEncryptor
-from golem.resource.ipfs.resourceserver import IPFSTransferStatus
 
+from golem.core.fileencrypt import FileEncryptor
 from .resultpackage import EncryptingTaskResultPackager
 
 logger = logging.getLogger(__name__)

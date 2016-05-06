@@ -1,11 +1,11 @@
-import time
 import abc
 import copy
+import logging
+import time
 
-from golem.core.simpleserializer import SimpleSerializer
 from golem.core.databuffer import DataBuffer
 from golem.core.simplehash import SimpleHash
-import logging
+from golem.core.simpleserializer import SimpleSerializer
 
 logger = logging.getLogger(__name__)
 

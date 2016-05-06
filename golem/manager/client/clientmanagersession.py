@@ -1,13 +1,12 @@
+import cPickle as pickle
+import logging
+import os
+import time
 
+from golem.core.prochelper import ProcessService
+from golem.manager.managerconnstate import ManagerConnState
 from golem.network.transport.message import MessagePeerStatus, MessageKillNode, MessageNewTask, MessageKillAllNodes, \
     MessageNewNodes
-from golem.manager.managerconnstate import ManagerConnState
-from golem.core.prochelper import ProcessService
-
-import cPickle as pickle
-import time
-import os
-import logging
 
 logger = logging.getLogger(__name__)
 

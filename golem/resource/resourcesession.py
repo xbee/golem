@@ -1,10 +1,10 @@
 import logging
 
-
 from golem.network.transport.message import MessageHello, MessageRandVal, MessageHasResource, MessageWantResource, \
-    MessagePushResource, MessagePullResource, MessagePullAnswer, MessageSendResource
+    MessagePushResource, MessagePullResource, MessagePullAnswer
+from golem.network.transport.prosumer import EncryptFileProducer, DecryptFileConsumer
+from golem.network.transport.protocol import FilesProtocol
 from golem.network.transport.session import BasicSafeSession
-from golem.network.transport.tcpnetwork import FilesProtocol, EncryptFileProducer, DecryptFileConsumer
 
 logger = logging.getLogger(__name__)
 

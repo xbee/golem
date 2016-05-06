@@ -4,7 +4,7 @@ import jsonpickle
 from mock import patch, call
 from gnr.node import start
 from click.testing import CliRunner
-from golem.network.transport.tcpnetwork import SocketAddress
+from golem.network.transport.network import SocketAddress
 from golem.tools.testwithdatabase import TestWithDatabase
 
 

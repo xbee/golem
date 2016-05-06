@@ -1,5 +1,6 @@
-from golem.transactions.incomeskeeper import IncomesKeeper
 from ethereum.utils import sha3, decode_hex
+
+from golem.transactions.incomeskeeper import IncomesKeeper
 
 
 class EthereumIncomesKeeper(IncomesKeeper):

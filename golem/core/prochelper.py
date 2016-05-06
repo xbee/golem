@@ -1,11 +1,12 @@
-import os
-import psutil
 import fnmatch
-import time
 import logging
+import os
+import time
 
-from simpleserializer import SimpleSerializer
+import psutil
+
 from simpleenv import SimpleEnv
+from simpleserializer import SimpleSerializer
 from variables import DEFAULT_PROC_FILE, MAX_PROC_FILE_SIZE
 
 logger = logging.getLogger(__name__)
