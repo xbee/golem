@@ -4,6 +4,9 @@ import sys
 sys.frozen = True
 py_ver = '.'.join(sys.version.split('.')[:2])
 
+FILE_NAME = sys.executable
+DIR_NAME = os.path.dirname(sys.executable)
+
 
 def get_platform():
     if sys.platform.startswith('win') or sys.platform.startswith('nt'):
@@ -33,7 +36,7 @@ image_formats_dir = os.path.join(pkg_dir, 'imageformats')
 dep_path = os.path.join(pkg_dir, 'python' + py_ver.replace('.', ''))
 lib_path = os.path.join(pkg_dir, 'python' + py_ver)
 
-sys.path = [dep_path, cur_dir, INITSCRIPT_ZIP_FILE_NAME]
+sys.path = [dep_path, cur_dir, lib_path]
 ld_paths = [cur_dir, pkg_dir, lib_path, image_formats_dir]
 
 platform = get_platform()

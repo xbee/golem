@@ -1,19 +1,19 @@
 import ctypes
+import imp
 import inspect
 import os
-from collections import namedtuple, OrderedDict
-
-import imp
-import pkg_resources
 import pkgutil
 import shutil
 import subprocess
 import sys
 import time
+from collections import namedtuple, OrderedDict
+from ctypes.util import find_library
 from distutils import dir_util
 from zipimport import zipimporter
 
-from cx_Freeze import Executable
+import cx_Freeze
+import pkg_resources
 from setuptools import Command
 
 
@@ -474,13 +474,10 @@ class PackageCreator(Command):
     platform = get_platform()
 
     setup_dir = None
-    init_script = None
 
     def run(self):
 
         cmd = ['python', 'setup.py', 'build_exe']
-        if self.platform != 'linux':
-            cmd += ['--init-script', self.init_script]
 
         os.chdir(self.setup_dir)
         subprocess.check_call(cmd)
@@ -494,11 +491,13 @@ class PackageCreator(Command):
         for _exe_dir in exe_dirs:
             exe_dir = os.path.join(base_dir, _exe_dir)
             lib_dir = os.path.join(exe_dir, 'lib')
+
             x_dir = self._extract_modules(exe_dir, lib_dir)
 
             if not x_dir:
                 raise EnvironmentError("Invalid module archive")
 
+            self._lib_to_exe(self.lib_to_exe, lib_dir, exe_dir)
             self._pack_modules(exe_dir, lib_dir, x_dir)
             self._copy_files(x_dir)
             self._create_files(exe_dir, x_dir)
@@ -507,6 +506,7 @@ class PackageCreator(Command):
 
     def initialize_options(self):
         self.extract_modules = None
+        self.lib_to_exe = None
         self.pack_modules = None
         self.copy_files = None
         self.create_files = None
@@ -523,6 +523,8 @@ class PackageCreator(Command):
 
         if not self.extract_modules:
             self.extract_modules = getattr(self.distribution, 'extract_modules', [])
+        if not self.lib_to_exe:
+            self.lib_to_exe = getattr(self.distribution, 'lib_to_exe', [])
         if not self.pack_modules:
             self.pack_modules = getattr(self.distribution, 'pack_modules', [])
         if not self.create_files:
@@ -546,8 +548,23 @@ class PackageCreator(Command):
 
             if os.path.exists(src_file):
                 self._unzip(src_file, dest_path)
-                self._clean_zip(src_file, zipped.exclude)
+                os.remove(src_file)
                 return dest_path
+
+    def _lib_to_exe(self, files, lib_dir, exe_dir):
+        if not files:
+            return
+
+        lib_dir = os.path.join(lib_dir, 'python' + self.py_v)
+        lib_contents = [os.path.join(lib_dir, f) for f in os.listdir(lib_dir)]
+
+        for lib_file_path in lib_contents:
+            lib_file_name = os.path.basename(lib_file_path)
+
+            for file_name in files:
+                if lib_file_name.startswith(file_name.replace('*', '')):
+                    print "Moving", lib_file_path
+                    shutil.move(lib_file_path, os.path.join(exe_dir, lib_file_name))
 
     def _find_lib(self, lib):
         if not lib:
@@ -557,7 +574,7 @@ class PackageCreator(Command):
             ld_path = os.environ.get(env_name, '')
             return ld_path.split(os.path.sep) if ld_path else []
 
-        libname = ctypes.util.find_library(lib)
+        libname = find_library(lib)
 
         if not libname:
 
@@ -726,30 +743,25 @@ class PackageCreator(Command):
             method(self, exe_dir, lib_dir, x_dir)
 
     @staticmethod
-    def _clean_zip(src_file, exclude):
+    def _extract_files_from_zip(src_file, dest_dir, to_keep):
         import zipfile
-        import uuid
 
-        if not isinstance(exclude, list):
-            exclude = [exclude]
+        if not isinstance(to_keep, list):
+            to_keep = [to_keep]
 
-        white_list = ['BUILD_CONSTANTS', 'cx_Freeze'] + [entry.split('.')[0] for entry in exclude]
-        tmp_file = src_file + "-" + str(uuid.uuid4())
+        white_list = ['BUILD_CONSTANTS', 'cx_Freeze', '__startup__'] + [
+            entry.split('.')[0] for entry in to_keep
+        ]
 
         zip_in = zipfile.ZipFile(src_file, 'r')
-        zip_out = zipfile.ZipFile(tmp_file, 'w')
 
         for item in zip_in.infolist():
-            buf = zip_in.read(item.filename)
-            for w in white_list:
-                if item.filename.startswith(w):
-                    zip_out.writestr(item, buf)
+            for entry in white_list:
+                if item.filename.startswith(entry):
+                    with open(os.path.join(dest_dir, item.filename), 'wb') as f:
+                        f.write(zip_in.read(item.filename))
 
-        zip_out.close()
         zip_in.close()
-
-        os.remove(src_file)
-        shutil.move(tmp_file, src_file)
 
     @staticmethod
     def _unzip(src_file, dest_path):
@@ -757,7 +769,7 @@ class PackageCreator(Command):
         with zipfile.ZipFile(src_file) as zf:
             if not os.path.exists(dest_path):
                 try:
-                    os.makedirs(dest_path, 0755)
+                    os.makedirs(dest_path, 0751)
                 except:
                     pass
                 zf.extractall(dest_path)
@@ -1271,6 +1283,9 @@ build_options = {
                           exclude=app_scripts,
                           in_lib_dir=False)
         ],
+        'lib_to_exe': [
+            'golemapp*', 'golemcli*', '__startup__.pyc'
+        ],
         # Patch missing module files
         'copy_files': {
             'bitcoin': ['english.txt'],
@@ -1373,8 +1388,6 @@ build_options = {
 def update_setup_config(setup_dir, options=None, cmdclass=None, executables=None):
 
     init_script_dir = os.path.join(setup_dir, 'scripts', 'packaging', 'cx_Freeze', 'initscripts')
-
-    PackageCreator.init_script = os.path.join(init_script_dir, 'Console.py')
     PackageCreator.setup_dir = setup_dir
 
     if options is not None:
@@ -1385,8 +1398,11 @@ def update_setup_config(setup_dir, options=None, cmdclass=None, executables=None
 
     if executables is not None:
         for app in apps:
-            executables.append(Executable(
+            executable = cx_Freeze.Executable(
                 base=app['base'],
-                script=app['script'],
-                initScript=os.path.join(init_script_dir, app['init_script']),
-            ))
+                script=app['script']
+            )
+
+            executable._GetInitScriptFileName = lambda *_: True
+            executable.initScript = os.path.join(init_script_dir, app['init_script'])
+            executables.append(executable)
