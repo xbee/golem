@@ -10,6 +10,7 @@ import time
 from collections import namedtuple, OrderedDict
 from ctypes.util import find_library
 from distutils import dir_util
+from distutils.dir_util import copy_tree
 from zipimport import zipimporter
 
 import cx_Freeze
@@ -471,6 +472,8 @@ class PackageCreator(Command):
 
     py_vd = '.'.join(sys.version.split('.')[:2])
     py_v = py_vd.replace('.', '')
+    pydir_vd = 'python' + py_vd
+    pydir_v = 'python' + py_v
     platform = get_platform()
 
     setup_dir = None
@@ -499,7 +502,7 @@ class PackageCreator(Command):
 
             self._lib_to_exe(self.lib_to_exe, lib_dir, exe_dir)
             self._pack_modules(exe_dir, lib_dir, x_dir)
-            self._copy_files(x_dir)
+            self._copy_files(x_dir, lib_dir)
             self._create_files(exe_dir, x_dir)
             self._copy_libs(exe_dir, lib_dir, x_dir)
             self._post_pack(exe_dir, lib_dir, x_dir)
@@ -721,22 +724,42 @@ class PackageCreator(Command):
             dest_path = os.path.join(dest_dir, os.path.basename(src_path))
             shutil.copy(src_path, dest_path)
 
-    def _copy_files(self, lib_dir):
+    def _copy_files(self, x_dir, lib_dir):
+
+        def _copy(_src, _dest, _dest2):
+            _dir = os.path.dirname(_dest)
+            if not os.path.exists(_dir):
+                os.makedirs(_dir)
+
+            if os.path.isfile(_src):
+                shutil.copy(_src, _dest)
+            elif os.path.isdir(_src):
+                copy_tree(_src, _dest2, update=True)
+            else:
+                print "Error copying {} to {}".format(_src, _dest)
+
+        def _src_dir(_module):
+            try:
+                return self._get_module_path(_module)
+            except Exception as e:
+                if os.path.exists(_module):
+                    return os.path.abspath(_module)
+                raise e
+
+        lib_dir = os.path.join(lib_dir, 'python' + self.py_vd)
+
         for module, files in self.copy_files.iteritems():
-            src_dir = self._get_module_path(module)
-            dest_dir = os.path.join(lib_dir, module)
+            src_dir = _src_dir(module)
+            file_dir = os.path.join(x_dir, module)
+            dir_dir = os.path.join(lib_dir, module)
 
             if src_dir and files:
                 for filename in files:
-                    src_file_path = os.path.join(src_dir, filename)
-                    dest_file_path = os.path.join(dest_dir, filename)
-                    file_dir = os.path.dirname(dest_file_path)
-
-                    if not os.path.exists(file_dir):
-                        os.makedirs(file_dir)
-
-                    print "Copying file {} to {}".format(src_file_path, dest_file_path)
-                    shutil.copy(src_file_path, dest_file_path)
+                    _copy(
+                        os.path.join(src_dir, filename),
+                        os.path.join(file_dir, filename),
+                        os.path.join(dir_dir, filename)
+                    )
 
     def _post_pack(self, exe_dir, lib_dir, x_dir):
         for method in self.post_pack:
@@ -758,7 +781,8 @@ class PackageCreator(Command):
         for item in zip_in.infolist():
             for entry in white_list:
                 if item.filename.startswith(entry):
-                    with open(os.path.join(dest_dir, item.filename), 'wb') as f:
+                    dest_file_name = os.path.join(dest_dir, item.filename)
+                    with open(dest_file_name, 'wb') as f:
                         f.write(zip_in.read(item.filename))
 
         zip_in.close()
@@ -769,9 +793,9 @@ class PackageCreator(Command):
         with zipfile.ZipFile(src_file) as zf:
             if not os.path.exists(dest_path):
                 try:
-                    os.makedirs(dest_path, 0751)
-                except:
-                    pass
+                    os.makedirs(dest_path, 0755)
+                except Exception as exc:
+                    print "Error creating directory {}: {}".format(dest_path, exc)
                 zf.extractall(dest_path)
 
     @staticmethod
@@ -908,7 +932,7 @@ def osx_rewrite_lib_paths(creator, exe_dir, lib_dir, *args):
     """
 
     platform = creator.platform
-    py_v = creator.py_v
+    pydir_v = creator.pydir_v
     if platform != 'osx':
         return
 
@@ -916,7 +940,7 @@ def osx_rewrite_lib_paths(creator, exe_dir, lib_dir, *args):
         return os.path.join(exe_dir, _lib)
 
     def _make_lib_py_path(_lib):
-        return os.path.join(lib_dir, 'python' + py_v, 'PyQt4', _lib + '.so')
+        return os.path.join(lib_dir, pydir_v, 'PyQt4', _lib + '.so')
 
     rewrite_libs = [
         'QtCore',
@@ -1027,7 +1051,6 @@ def all_task_collector(creator, *args):
 
 
 def all_assemble(creator, _exe_dir, _lib_dir, x_dir, *args):
-    from distutils.dir_util import copy_tree
     import zipfile
     import re
 
@@ -1079,9 +1102,6 @@ def all_assemble(creator, _exe_dir, _lib_dir, x_dir, *args):
         if os.path.exists(pack_dir):
             shutil.rmtree(pack_dir)
 
-        pack_taskcollector_dir = new_package_subdir(os.path.join(x_dir, taskcollector_dir))
-        copy_tree(taskcollector_dir, pack_taskcollector_dir, update=True)
-
         exe_dir = build_subdir(dir_name)
         pack_exe_dir = new_package_subdir(dir_name)
         pack_docker_dir = new_package_subdir(docker_dir)
@@ -1130,8 +1150,6 @@ def all_assemble(creator, _exe_dir, _lib_dir, x_dir, *args):
     package_subdir = 'golem'
 
     runner_scripts_dir = os.path.join(scripts_dir, 'packaging', 'runner')
-    taskcollector_dir = os.path.join('gnr', 'taskcollector', 'Release')
-
     task_dir = os.path.join('gnr', 'task')
     pack_dir = build_subdir(package_subdir)
 
@@ -1141,30 +1159,6 @@ def all_assemble(creator, _exe_dir, _lib_dir, x_dir, *args):
     for subdir in sub_dirs:
         if subdir.startswith('exe'):
             assemble_dir(subdir)
-
-
-def all_assets(creator, exe_dir, lib_dir, x_dir):
-    from distutils.dir_util import copy_tree
-
-    scripts_dir = os.path.join('gnr', 'task', 'scripts')
-    scripts_dest_dir = os.path.join(x_dir, scripts_dir)
-
-    images_dir = os.path.join('gnr', 'ui', 'img')
-    images_dest_dir = os.path.join(x_dir, images_dir)
-
-    benchmarks_dir = os.path.join('gnr', 'benchmarks')
-    benchmarks_dest_dir = os.path.join(x_dir, benchmarks_dir)
-
-    copy_tree(scripts_dir, scripts_dest_dir, update=True)
-    copy_tree(images_dir, images_dest_dir, update=True)
-    copy_tree(benchmarks_dir, benchmarks_dest_dir, update=True)
-
-    no_preview_path = os.path.join('gnr', 'ui', 'nopreview.png')
-    no_preview_dest_path = os.path.join(x_dir, no_preview_path)
-
-    if os.path.exists(no_preview_dest_path):
-        os.remove(no_preview_dest_path)
-    shutil.copy(no_preview_path, no_preview_dest_path)
 
 
 def all_licenses(creator, exe_dir, lib_dir, x_dir):
@@ -1276,7 +1270,7 @@ build_options = {
         ],
         # Extract files zipped by cx_Freeze
         'extract_modules': [
-            ZippedPackage("python" + PackageCreator.py_v + ".zip",
+            ZippedPackage(PackageCreator.pydir_v + ".zip",
                           exclude=app_scripts,
                           in_lib_dir=True),
             ZippedPackage("library.zip",
@@ -1289,7 +1283,12 @@ build_options = {
         # Patch missing module files
         'copy_files': {
             'bitcoin': ['english.txt'],
-            'gnr': ['logging.ini'],
+            'gnr': [
+                'ui', 'benchmarks',
+                os.path.join('taskcollector', 'Release'),
+                os.path.join('task', 'scripts'),
+                'logging.ini',
+            ],
             'golem': [
                 os.path.join('ethereum', 'genesis_golem.json'),
                 os.path.join('ethereum', 'mine_pending_transactions.js')
@@ -1376,7 +1375,6 @@ build_options = {
             win_clean_qt,
             osx_rewrite_lib_paths,
             osx_rewrite_python,
-            all_assets,
             all_task_collector,
             all_licenses,
             all_assemble

@@ -1,6 +1,5 @@
 import os
-from mock import Mock, patch
-from multiprocessing import Queue
+from multiprocessing import Pipe
 
 from gnr.gnrstartapp import load_environments, start_client_process, \
     start_gui_process, GUIApp
@@ -9,6 +8,7 @@ from golem.core.common import config_logging
 from golem.environments.environment import Environment
 from golem.rpc.websockets import WebSocketRPCServerFactory
 from golem.tools.testwithreactor import TestDirFixtureWithReactor
+from mock import Mock, patch
 
 
 class MockService(object):
@@ -41,7 +41,7 @@ class TestStartAppFunc(TestDirFixtureWithReactor):
                             use_docker_machine_manager=False,
                             use_monitor=False)
 
-            start_client_process(queue=Mock(),
+            start_client_process(conn=Mock(),
                                  client=client,
                                  start_ranking=False)
         except Exception as exc:
@@ -52,13 +52,13 @@ class TestStartAppFunc(TestDirFixtureWithReactor):
 
     @patch('logging.config.fileConfig')
     def test_start_gui(self, *_):
-        queue = Queue()
+        parent_conn, child_conn = Pipe()
 
         rpc_server = WebSocketRPCServerFactory()
         rpc_server.local_host = '127.0.0.1'
 
         mock_service_info = rpc_server.add_service(MockService())
-        queue.put(mock_service_info)
+        parent_conn.send(mock_service_info)
 
         gui_app = None
 
@@ -67,7 +67,7 @@ class TestStartAppFunc(TestDirFixtureWithReactor):
             gui_app.listen = Mock()
             reactor = self._get_reactor()
 
-            start_gui_process(queue, self.path,
+            start_gui_process(child_conn, self.path,
                               gui_app=gui_app,
                               reactor=reactor)
         except Exception as exc:

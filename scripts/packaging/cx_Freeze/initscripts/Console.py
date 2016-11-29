@@ -29,14 +29,13 @@ def exec_env(var_name, custom_paths):
         os.execv(sys.executable, sys.argv)
         sys.exit(0)
 
-
 cur_dir = os.path.abspath(DIR_NAME)
 pkg_dir = os.path.join(cur_dir, 'lib')
 image_formats_dir = os.path.join(pkg_dir, 'imageformats')
 dep_path = os.path.join(pkg_dir, 'python' + py_ver.replace('.', ''))
 lib_path = os.path.join(pkg_dir, 'python' + py_ver)
 
-sys.path = [dep_path, cur_dir, lib_path]
+sys.path = [cur_dir, dep_path, lib_path]
 ld_paths = [cur_dir, pkg_dir, lib_path, image_formats_dir]
 
 platform = get_platform()
@@ -54,9 +53,7 @@ os.environ["PATH"] = os.pathsep.join([cur_dir, os.environ["PATH"]])
 m = __import__("__main__")
 
 name, ext = os.path.splitext(os.path.basename(os.path.normcase(FILE_NAME)))
-moduleName = "%s__main__" % name
+moduleName = "{}__main__".format(name)
 
-import importlib
-
-module = importlib.import_module(moduleName)
+module = __import__(moduleName)
 module.start()

@@ -1,9 +1,8 @@
 import logging
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Pipe, TimeoutError
 from os import path
 
-from twisted.internet.defer import inlineCallbacks
-
+import time
 from gnr.application import GNRGui
 from gnr.customizers.blenderrenderdialogcustomizer import BlenderRenderDialogCustomizer
 from gnr.customizers.luxrenderdialogcustomizer import LuxRenderDialogCustomizer
@@ -22,7 +21,7 @@ from golem.core.processmonitor import ProcessMonitor
 from golem.environments.environment import Environment
 from golem.rpc.service import RPCServiceInfo
 from golem.rpc.websockets import WebSocketRPCServerFactory, WebSocketRPCClientFactory
-
+from twisted.internet.defer import inlineCallbacks
 
 GUI_LOG_NAME = "golem_gui.log"
 CLIENT_LOG_NAME = "golem_client.log"
@@ -58,6 +57,24 @@ def register_rendering_task_types(logic):
                                                            LuxRenderDialogCustomizer))
 
 
+def conn_poll(conn, timeout=300):
+    deadline = time.time() + timeout
+
+    while True:
+        if time.time() > deadline:
+            raise TimeoutError
+
+        if conn.poll():
+            result = conn.recv()
+            conn.close()
+
+            if isinstance(result, Exception):
+                raise result
+            return result
+
+        time.sleep(0.1)
+
+
 class GUIApp(object):
 
     def __init__(self, rendering):
@@ -79,7 +96,7 @@ class GUIApp(object):
         self.app.execute(True)
 
 
-def start_gui_process(queue, datadir, rendering=True, gui_app=None, reactor=None):
+def start_gui_process(conn, datadir, rendering=True, gui_app=None, reactor=None):
 
     if datadir:
         log_name = path.join(datadir, GUI_LOG_NAME)
@@ -88,8 +105,7 @@ def start_gui_process(queue, datadir, rendering=True, gui_app=None, reactor=None
 
     config_logging(log_name)
     logger = logging.getLogger("gnr.app")
-
-    client_service_info = queue.get(True, 3600)
+    client_service_info = conn_poll(conn)
 
     if not isinstance(client_service_info, RPCServiceInfo):
         logger.error("GUI process error: {}".format(client_service_info))
@@ -121,7 +137,7 @@ def start_gui_process(queue, datadir, rendering=True, gui_app=None, reactor=None
         reactor.run()
 
 
-def start_client_process(queue, start_ranking, datadir=None,
+def start_client_process(conn, start_ranking, datadir=None,
                          transaction_system=False, client=None):
 
     if datadir:
@@ -140,7 +156,8 @@ def start_client_process(queue, start_ranking, datadir=None,
             client.start()
         except Exception as exc:
             logger.error("Client process error: {}".format(exc))
-            queue.put(exc)
+            conn.send(exc)
+            conn.close()
             return
 
     for env in environments:
@@ -152,9 +169,8 @@ def start_client_process(queue, start_ranking, datadir=None,
         rpc_server.listen()
 
         client_service_info = client.set_rpc_server(rpc_server)
-
-        queue.put(client_service_info)
-        queue.close()
+        conn.send(client_service_info)
+        conn.close()
 
     from twisted.internet import reactor
 
@@ -169,10 +185,10 @@ def start_client_process(queue, start_ranking, datadir=None,
 def start_app(datadir=None, rendering=False,
               start_ranking=True, transaction_system=False):
 
-    queue = Queue()
+    parent_conn, child_conn = Pipe()
 
     gui_process = Process(target=start_gui_process,
-                          args=(queue, datadir, rendering))
+                          args=(child_conn, datadir, rendering))
     gui_process.daemon = True
     gui_process.start()
 
@@ -181,7 +197,7 @@ def start_app(datadir=None, rendering=False,
     process_monitor.start()
 
     try:
-        start_client_process(queue, start_ranking, datadir, transaction_system)
+        start_client_process(parent_conn, start_ranking, datadir, transaction_system)
     except Exception as exc:
         print "Exception in Client process: {}".format(exc)
 
